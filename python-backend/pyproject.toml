@@ -1,0 +1,78 @@
+[build-system]
+requires = ["setuptools>=61.0", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "ocr-desktop-manager"
+version = "1.0.0"
+description = "Desktop OCR application with server synchronization"
+readme = "README.md"
+requires-python = ">=3.10"
+license = {text = "MIT"}
+authors = [
+    {name = "Frykt", email = "my.email@example.com"}
+]
+keywords = ["ocr", "desktop", "fastapi", "paddleocr", "easyocr"]
+classifiers = [
+    "Development Status :: 4 - Beta",
+    "Intended Audience :: Developers",
+    "Programming Language :: Python :: 3",
+    "Programming Language :: Python :: 3.10",
+    "Programming Language :: Python :: 3.11",
+]
+
+dependencies = [
+    "fastapi==0.110.0",
+    "uvicorn[standard]==0.27.0",
+    "sqlalchemy==2.0.27",
+    "alembic==1.13.1",
+    "pydantic==2.6.1",
+    "pydantic-settings==2.1.0",
+    "easyocr==1.7.1",
+    "paddleocr==2.7.3",
+    "paddlepaddle==2.6.0",
+    "PyMuPDF==1.23.26",
+    "pypdf==4.0.1",
+    "Pillow==10.2.0",
+    "watchdog==4.0.0",
+    "opensearch-py==2.4.2",
+    "python-multipart==0.0.9",
+    "python-dotenv==1.0.1",
+    "httpx==0.26.0",
+]
+
+[project.optional-dependencies]
+dev = [
+    "pytest==7.4.3",
+    "pytest-asyncio==0.21.1",
+    "pytest-cov==4.1.0",
+    "black==23.12.1",
+    "flake8==7.0.0",
+    "mypy==1.8.0",
+    "pyinstaller==6.3.0",
+]
+
+[project.scripts]
+ocr-desktop = "app.main:start_server"
+
+[tool.setuptools.packages.find]
+where = ["."]
+include = ["app*"]
+
+[tool.black]
+line-length = 100
+target-version = ['py310', 'py311'~]
+include = '\.pyi?$'
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+python_files = ["test_*.py"]
+python_classes = ["Test*"]
+python_functions = ["test_*"]
+addopts = "-v --cov=app --cov-report=html --cov-report=term"
+
+[tool.mypy]
+python_version = "3.11"
+warn_return_any = true
+warn_unused_configs = true
+disallow_untyped_defs = false

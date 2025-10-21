@@ -1,0 +1,181 @@
+# ==================== Python ====================
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+build/
+develop-eggs/
+dist/
+downloads/
+eggs/
+.eggs/
+lib/
+lib64/
+parts/
+sdist/
+var/
+wheels/
+pip-wheel-metadata/
+share/python-wheels/
+*.egg-info/
+.installed.cfg
+*.egg
+MANIFEST
+
+# ==================== Virtual Environment ====================
+venv/
+ENV/
+env/
+.venv
+
+# ==================== IDEs ====================
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+.project
+.pydevproject
+.settings/
+
+# ==================== OS ====================
+.DS_Store
+.DS_Store?
+._*
+.Spotlight-V100
+.Trashes
+ehthumbs.db
+Thumbs.db
+desktop.ini
+
+# ==================== Application Data ====================
+# Локальное хранилище пользователя
+storage/
+logs/
+*.log
+
+# SQLite базы данных
+*.db
+*.db-journal
+*.db-shm
+*.db-wal
+*.sqlite
+*.sqlite3
+
+# Конфигурация
+.env
+.env.local
+.env.*.local
+
+# Кэш OCR моделей (очень большие файлы!)
+*.pth
+*.pt
+*.onnx
+*.pb
+models/
+cache/
+.cache/
+
+# Временные файлы обработки
+temp/
+tmp/
+*.tmp
+
+# ==================== Testing ====================
+.pytest_cache/
+.coverage
+.coverage.*
+htmlcov/
+*.cover
+.hypothesis/
+.tox/
+nosetests.xml
+coverage.xml
+*.log
+
+# ==================== Build & Distribution ====================
+build/
+dist/
+*.spec
+*.exe
+*.msi
+*.dmg
+*.pkg
+*.deb
+*.rpm
+
+# PyInstaller
+*.manifest
+
+# ==================== OCR Specific ====================
+# Скачанные модели OCR (могут быть GB размером!)
+.EasyOCR/
+paddleocr/weights/
+easyocr/model/
+*.caffemodel
+*.prototxt
+
+# Обработанные изображения
+processed/
+output/
+
+# ==================== Jupyter Notebook ====================
+.ipynb_checkpoints
+*.ipynb
+
+# ==================== Alembic ====================
+# Не игнорируйте миграции, но игнорируйте временные файлы
+migrations/__pycache__/
+migrations/versions/__pycache__/
+
+# ==================== Локальные настройки разработчиков ====================
+local_settings.py
+*.local
+
+# ==================== Документация ====================
+docs/_build/
+site/
+
+# ==================== macOS ====================
+.AppleDouble
+.LSOverride
+
+# ==================== Windows ====================
+$RECYCLE.BIN/
+
+# ==================== Linux ====================
+*~
+.fuse_hidden*
+.directory
+.Trash-*
+.nfs*
+
+# ==================== Rust (для компиляции некоторых зависимостей) ====================
+target/
+Cargo.lock
+
+# ==================== npm (если будет интеграция с Electron) ====================
+node_modules/
+package-lock.json
+yarn.lock
+
+# ==================== Специфичные для проекта ====================
+# Папка для тестовых файлов
+test_files/
+sample_pdfs/
+
+# Резервные копии БД
+*.backup
+*.bak
+
+# Профилирование
+*.prof
+*.lprof
+
+# Секреты и токены
+secrets/
+*.key
+*.pem
+*.crt
+*.p12
