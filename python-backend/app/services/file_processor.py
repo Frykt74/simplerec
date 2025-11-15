@@ -137,3 +137,44 @@ class FileProcessor:
         
         except Exception as e:
             raise FileProcessError(image_path, f"Failed to load image: {e}")
+
+@staticmethod
+def process_pdf_with_ocr(
+    pdf_path: str,
+    ocr_manager,
+    engine: str,
+    dpi: int = 300,
+    mode: str = "printed"
+) -> Dict:
+    """Обработать PDF через OCR"""
+    
+    all_text = []
+    pages_info = []
+    total_confidence = 0.0
+    page_count = 0
+    
+    for idx, page_image in enumerate(FileProcessor.pdf_to_images(pdf_path, dpi), start=1):
+        # ИСПОЛЬЗУЕМ МЕНЕДЖЕР
+        result = ocr_manager.recognize(
+            image=page_image,
+            engine_name=engine,
+            mode=mode
+        )
+        
+        all_text.append(result["text"])
+        total_confidence += result["confidence"]
+        page_count += 1
+        
+        pages_info.append({
+            "page_number": idx,
+            "text": result["text"],
+            "confidence": result["confidence"],
+            "boxes": result.get("boxes", [])
+        })
+    
+    return {
+        "text": "\f".join(all_text),
+        "pages": pages_info,
+        "confidence": total_confidence / page_count if page_count > 0 else 0.0,
+        "page_count": page_count
+    }

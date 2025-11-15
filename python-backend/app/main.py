@@ -14,10 +14,13 @@ from app.db.init_db import init_db
 from app.db.session import SessionLocal
 from app.models.file import File as FileModel
 from app.services.file_monitor import FileMonitor
-from app.services.search_service import ensure_fts_table  # ДОБАВЛЕНО
+from app.services.search_service import ensure_fts_table
+from app.workers.queue_manager import QueueManager
+from app.workers.ocr_worker import process_ocr_task
 
 logger = get_logger(__name__)
 file_monitor: FileMonitor | None = None
+queue_manager: QueueManager | None = None
 
 
 def _hash_file(p: str) -> str:
@@ -28,7 +31,8 @@ def _hash_file(p: str) -> str:
     return h.hexdigest()
 
 
-def _on_new_file(filepath: str):
+async def _on_new_file(filepath: str):
+    global queue_manager
     try:
         db = SessionLocal()
         stat = os.stat(filepath)
@@ -51,53 +55,56 @@ def _on_new_file(filepath: str):
         )
         db.add(rec)
         db.commit()
-        logger.info(f"Indexed new file: {filepath}")
+        db.refresh(rec)
+        file_id = rec.id
+        
+        logger.info(f"Indexed new file: {filepath} (id={file_id})")
         db.close()
+        
+        if queue_manager:
+            await queue_manager.add_task({"file_id": file_id})
+        
     except Exception as e:
         logger.exception(f"Failed to index new file {filepath}: {e}")
 
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
-    # Инициализация при старте
+    global file_monitor, queue_manager
+    
     setup_logging()
     init_db()
-    
-    # ДОБАВЛЕНО: Инициализация FTS
     ensure_fts_table()
-
-    # Запуск мониторинга папки
-    global file_monitor
+    
+    queue_manager = QueueManager(worker_func=process_ocr_task, num_workers=settings.MAX_CONCURRENT_OCR)
+    await queue_manager.start()
+    
     file_monitor = FileMonitor(settings.WATCH_FOLDER, _on_new_file)
     file_monitor.start()
 
     try:
         yield
     finally:
-        # Корректное завершение
         if file_monitor:
             file_monitor.stop()
+        if queue_manager:
+            await queue_manager.stop()
 
 
 app = FastAPI(
     title="OCR Desktop Manager",
-    version="0.1.0",
+    version="1.0.0-mvp",
     lifespan=lifespan,
+    docs_url="/api/docs",
+    openapi_url="/api/openapi.json"
 )
 
-# Разрешим Electron UI с localhost
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=[
-        "http://localhost",
-        "http://127.0.0.1",
-        "http://localhost:*",
-        "http://127.0.0.1:*",
-    ],
+    allow_origins=["*"],
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
 )
 
-# Роуты API
 app.include_router(api_router, prefix="/api/v1")

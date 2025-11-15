@@ -236,6 +236,10 @@ class Settings(BaseSettings):
         hostname = socket.gethostname()
         return hashlib.md5(hostname.encode()).hexdigest()[:16]
 
+ALLOWED_OCR_ENGINES: List[str] = Field(
+        default=["paddleocr", "easyocr"],
+        description="Разрешенные OCR движки"
+    )
 
 # Глобальный экземпляр настроек
 settings = Settings()
