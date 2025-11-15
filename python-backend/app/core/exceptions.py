@@ -192,4 +192,14 @@ class ConfigurationError(AppException):
             error_code="CONFIG_ERROR",
             details={"setting": setting, "reason": reason}
         )
-        
+
+
+class FileProcessError(FileException):
+    """Ошибка обработки файла"""
+    
+    def __init__(self, filepath: str, reason: str):
+        super().__init__(
+            message=f"File processing failed: {reason}",
+            error_code="FILE_PROCESS_ERROR",
+            details={"filepath": filepath, "reason": reason}
+        )
