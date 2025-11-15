@@ -3,6 +3,7 @@ from pathlib import Path
 import hashlib
 import mimetypes
 import os
+import signal
 
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
@@ -17,18 +18,12 @@ from app.services.file_monitor import FileMonitor
 from app.services.search_service import ensure_fts_table
 from app.workers.queue_manager import QueueManager
 from app.workers.ocr_worker import process_ocr_task
+from app.api.v1.endpoints import ws
+from app.utils.hash_utils import hash_file
 
 logger = get_logger(__name__)
 file_monitor: FileMonitor | None = None
 queue_manager: QueueManager | None = None
-
-
-def _hash_file(p: str) -> str:
-    h = hashlib.sha256()
-    with open(p, "rb") as f:
-        for chunk in iter(lambda: f.read(8192), b""):
-            h.update(chunk)
-    return h.hexdigest()
 
 
 async def _on_new_file(filepath: str):
@@ -37,7 +32,7 @@ async def _on_new_file(filepath: str):
         db = SessionLocal()
         stat = os.stat(filepath)
         mime = mimetypes.guess_type(filepath)[0] or "application/octet-stream"
-        file_hash = _hash_file(filepath)
+        file_hash = hash_file(filepath)
 
         exists = db.query(FileModel).filter(FileModel.file_hash == file_hash).first()
         if exists:
@@ -72,23 +67,62 @@ async def _on_new_file(filepath: str):
 async def lifespan(app: FastAPI):
     global file_monitor, queue_manager
     
+    logger.info("=" * 60)
+    logger.info("Starting OCR Desktop Manager...")
+    logger.info("=" * 60)
+    
     setup_logging()
     init_db()
     ensure_fts_table()
     
-    queue_manager = QueueManager(worker_func=process_ocr_task, num_workers=settings.MAX_CONCURRENT_OCR)
+    # Запуск очереди обработки
+    queue_manager = QueueManager(
+        worker_func=process_ocr_task,
+        num_workers=settings.MAX_CONCURRENT_OCR
+    )
     await queue_manager.start()
+    logger.info(f"Queue manager started with {settings.MAX_CONCURRENT_OCR} workers")
     
+    # Запуск мониторинга файлов
     file_monitor = FileMonitor(settings.WATCH_FOLDER, _on_new_file)
     file_monitor.start()
+    logger.info(f"File monitor started: {settings.WATCH_FOLDER}")
+    
+    def signal_handler(signum, frame):
+        """Обработчик сигналов завершения"""
+        sig_name = signal.Signals(signum).name
+        logger.warning(f"Received signal {sig_name} ({signum}), initiating graceful shutdown...")
+    
+    # Регистрация обработчиков сигналов
+    signal.signal(signal.SIGINT, signal_handler)   # Ctrl+C
+    signal.signal(signal.SIGTERM, signal_handler)  # kill
+    
+    logger.info("=" * 60)
+    logger.info("OCR Desktop Manager is ready!")
+    logger.info(f"API Documentation: http://{settings.LOCAL_SERVER_HOST}:{settings.LOCAL_SERVER_PORT}/api/docs")
+    logger.info(f"Watch folder: {settings.WATCH_FOLDER}")
+    logger.info("=" * 60)
 
     try:
         yield
     finally:
+        logger.info("=" * 60)
+        logger.info("Shutting down OCR Desktop Manager...")
+        logger.info("=" * 60)
+        
         if file_monitor:
+            logger.info("Stopping file monitor...")
             file_monitor.stop()
+            logger.info("File monitor stopped")
+        
         if queue_manager:
+            logger.info("Stopping queue manager...")
             await queue_manager.stop()
+            logger.info("Queue manager stopped")
+        
+        logger.info("=" * 60)
+        logger.info("Shutdown complete. Goodbye!")
+        logger.info("=" * 60)
 
 
 app = FastAPI(
@@ -108,3 +142,15 @@ app.add_middleware(
 )
 
 app.include_router(api_router, prefix="/api/v1")
+app.include_router(ws.router, prefix="/api/v1/ws", tags=["websocket"])
+
+@app.get("/")
+async def root():
+    """Корневой endpoint"""
+    return {
+        "app": settings.APP_NAME,
+        "version": settings.APP_VERSION,
+        "status": "running",
+        "docs": "/api/docs",
+        "health": "/api/v1/health"
+    }

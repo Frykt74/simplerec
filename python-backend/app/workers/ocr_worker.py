@@ -9,6 +9,7 @@ from app.services.document_service import DocumentService
 from app.services.search_service import index_document
 from app.services.ocr import get_ocr_manager
 from app.core.config import settings
+from app.api.v1.endpoints.ws import notify_processing_started, notify_processing_completed, notify_processing_failed
 
 logger = logging.getLogger(__name__)
 
@@ -25,6 +26,7 @@ async def process_ocr_task(data: dict):
         logger.error("No file_id in task data")
         return
     
+    await notify_processing_started(file_id)
     db: Session = SessionLocal()
     
     try:
@@ -78,11 +80,12 @@ async def process_ocr_task(data: dict):
         file_obj.ocr_mode = used_engine
         db.commit()
         
+        await notify_processing_completed(file_id, document.id)
         logger.info(f"Successfully processed file {file_id}, created document {document.id}")
         
     except Exception as e:
+        await notify_processing_failed(file_id, str(e))
         logger.exception(f"Failed to process file {file_id} in worker: {e}")
         db.rollback()
     finally:
         db.close()
-        
