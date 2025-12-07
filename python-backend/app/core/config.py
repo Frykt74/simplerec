@@ -51,8 +51,12 @@ class Settings(BaseSettings):
         default="paddleocr",
         description="Движок OCR по умолчанию (paddleocr или easyocr)"
     )
+    ALLOWED_OCR_ENGINES: List[str] = Field(
+        default=["paddleocr", "easyocr"],
+        description="Разрешенные OCR движки"
+    )
     OCR_LANGUAGES: List[str] = Field(
-        default=["en", "ru"],
+        default=["ru", "en"],
         description="Языки для распознавания"
     )
     OCR_GPU: bool = Field(
@@ -235,11 +239,6 @@ class Settings(BaseSettings):
         import hashlib
         hostname = socket.gethostname()
         return hashlib.md5(hostname.encode()).hexdigest()[:16]
-
-ALLOWED_OCR_ENGINES: List[str] = Field(
-        default=["paddleocr", "easyocr"],
-        description="Разрешенные OCR движки"
-    )
 
 # Глобальный экземпляр настроек
 settings = Settings()

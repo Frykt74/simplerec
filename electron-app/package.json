@@ -1,0 +1,40 @@
+{
+  "name": "electron-app",
+  "version": "1.0.0",
+  "type": "commonjs",
+  "main": "dist/main/index.js",
+  "scripts": {
+    "dev:renderer": "vite --config src/renderer/vite.config.ts",
+    "build:renderer": "vite build --config src/renderer/vite.config.ts",
+    "build:main": "tsc --project tsconfig.main.json",
+    "dev:main": "npm run build:main && wait-on http://localhost:5173 && electron .",
+    "dev": "concurrently -k \"npm run dev:renderer\" \"npm run build:main && npm run dev:main\"",
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "dependencies": {
+    "axios": "^1.13.2",
+    "electron": "^39.2.4",
+    "electron-builder": "^26.0.12",
+    "electron-is-dev": "^3.0.1",
+    "lucide-react": "^0.555.0",
+    "react": "^19.2.0",
+    "react-dom": "^19.2.0",
+    "react-router-dom": "^7.10.0",
+    "zustand": "^5.0.9"
+  },
+  "devDependencies": {
+    "@types/node": "^24.10.1",
+    "@types/react": "^19.2.7",
+    "@types/react-dom": "^19.2.3",
+    "@vitejs/plugin-react": "^5.1.1",
+    "concurrently": "^9.2.1",
+    "cross-env": "^10.1.0",
+    "ts-node": "^10.9.2",
+    "typescript": "^5.9.3",
+    "vite": "^7.2.6",
+    "wait-on": "^9.0.3"
+  }
+}

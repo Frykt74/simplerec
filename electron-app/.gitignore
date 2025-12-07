@@ -1,0 +1,42 @@
+# Зависимости Node.js
+node_modules/
+npm-debug.log*
+yarn-error.log*
+yarn.lock
+pnpm-lock.yaml
+
+# Системные файлы
+.DS_Store
+Thumbs.db
+
+# IDE и редакторы
+.vscode/
+.idea/
+*.suo
+*.ntvs
+*.njsproj
+*.sln
+*.swp
+
+# Локальные настройки окружения
+.env
+.env.local
+.env.*.local
+
+# Сборка Vite (Frontend)
+dist/
+dist-ssr/
+
+# Electron Builder
+# Electron-builder
+out/
+release/
+build/
+
+# TypeScript
+*.tsbuildinfo
+
+*.log
+
+# Тесты
+coverage/
